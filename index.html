@@ -1,11 +1,466 @@
 <!doctype html>
-<html lang="en">
+<html lang="pl">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bracelets</title>
+  <title>Bransoletki Custom</title>
+  <style>
+    :root{
+      --bg1:#0f172a;
+      --bg2:#111827;
+      --card:#0b1220cc;
+      --line:#e5e7eb;
+      --text:#f8fafc;
+      --muted:#94a3b8;
+      --accent:#a78bfa;
+      --accent2:#22c55e;
+      --shadow: 0 30px 80px rgba(0,0,0,.35);
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--text);
+      min-height:100vh;
+      background:
+        radial-gradient(circle at top left, #312e81 0%, transparent 30%),
+        radial-gradient(circle at top right, #7c3aed55 0%, transparent 28%),
+        linear-gradient(135deg, var(--bg1), var(--bg2));
+      overflow-x:hidden;
+    }
+
+    .wrap{
+      max-width:1200px;
+      margin:0 auto;
+      padding:32px 18px 50px;
+    }
+
+    .hero{
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap:22px;
+      align-items:stretch;
+    }
+
+    .panel{
+      background:var(--card);
+      border:1px solid rgba(255,255,255,.08);
+      backdrop-filter: blur(18px);
+      border-radius:28px;
+      box-shadow:var(--shadow);
+    }
+
+    .hero-left{
+      padding:30px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 14px;
+      border-radius:999px;
+      background:rgba(167,139,250,.14);
+      border:1px solid rgba(167,139,250,.35);
+      color:#ddd6fe;
+      font-size:13px;
+      font-weight:700;
+      letter-spacing:.2px;
+    }
+
+    h1{
+      margin:18px 0 12px;
+      font-size:clamp(34px, 5vw, 62px);
+      line-height:.95;
+      letter-spacing:-.05em;
+    }
+
+    .lead{
+      margin:0;
+      color:var(--muted);
+      font-size:18px;
+      max-width:58ch;
+      line-height:1.6;
+    }
+
+    .stats{
+      display:flex;
+      gap:14px;
+      flex-wrap:wrap;
+      margin-top:22px;
+    }
+
+    .stat{
+      padding:14px 16px;
+      border-radius:18px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.07);
+      min-width:140px;
+    }
+
+    .stat strong{
+      display:block;
+      font-size:20px;
+      margin-bottom:4px;
+    }
+
+    .stat span{
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .hero-right{
+      padding:24px;
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+      justify-content:center;
+    }
+
+    .bracelet-stage{
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:24px;
+      padding:22px;
+    }
+
+    .bracelet-label{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:16px;
+      color:#e2e8f0;
+      font-size:14px;
+      font-weight:600;
+    }
+
+    .string{
+      position:relative;
+      height:88px;
+      display:flex;
+      align-items:center;
+      padding:0 18px;
+      overflow:hidden;
+    }
+
+    .string::before{
+      content:"";
+      position:absolute;
+      left:12px;
+      right:12px;
+      top:50%;
+      height:4px;
+      transform:translateY(-50%);
+      border-radius:999px;
+      background:linear-gradient(90deg, #f8fafc, #cbd5e1, #f8fafc);
+      box-shadow:0 0 0 1px rgba(255,255,255,.12);
+    }
+
+    .beads{
+      position:relative;
+      z-index:1;
+      display:flex;
+      gap:10px;
+      flex-wrap:nowrap;
+      width:100%;
+      justify-content:center;
+    }
+
+    .bead-slot{
+      width:48px;
+      height:48px;
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      font-size:20px;
+      font-weight:800;
+      color:rgba(255,255,255,.9);
+      box-shadow:
+        inset 0 8px 18px rgba(255,255,255,.18),
+        inset 0 -10px 16px rgba(0,0,0,.22),
+        0 10px 25px rgba(0,0,0,.25);
+      border:1px solid rgba(255,255,255,.18);
+      flex:0 0 auto;
+      cursor:pointer;
+      transition:transform .18s ease, box-shadow .18s ease;
+    }
+
+    .bead-slot:hover{ transform: translateY(-2px) scale(1.03); }
+
+    .empty-note{
+      position:absolute;
+      inset:0;
+      display:grid;
+      place-items:center;
+      color:#cbd5e1;
+      font-size:14px;
+      pointer-events:none;
+      letter-spacing:.2px;
+    }
+
+    .controls{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .button{
+      border:0;
+      cursor:pointer;
+      padding:14px 18px;
+      border-radius:16px;
+      font-weight:800;
+      font-size:14px;
+      transition:transform .16s ease, opacity .16s ease, box-shadow .16s ease;
+    }
+
+    .button:active{ transform:scale(.98); }
+
+    .primary{
+      background:linear-gradient(135deg, #a78bfa, #22c55e);
+      color:#08111f;
+      box-shadow:0 16px 30px rgba(167,139,250,.25);
+    }
+
+    .ghost{
+      background:rgba(255,255,255,.07);
+      color:var(--text);
+      border:1px solid rgba(255,255,255,.1);
+    }
+
+    .button:disabled{
+      opacity:.45;
+      cursor:not-allowed;
+      transform:none;
+    }
+
+    .shop{
+      margin-top:22px;
+      display:grid;
+      gap:16px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .card{
+      border-radius:24px;
+      padding:18px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+    }
+
+    .card h2{
+      margin:0 0 6px;
+      font-size:18px;
+    }
+
+    .card p{
+      margin:0 0 14px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.5;
+    }
+
+    .bead-grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(82px, 1fr));
+      gap:10px;
+    }
+
+    .pick{
+      border:0;
+      border-radius:20px;
+      min-height:84px;
+      color:white;
+      font-weight:800;
+      cursor:pointer;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      text-align:center;
+      box-shadow: 0 10px 24px rgba(0,0,0,.22);
+      transition:transform .16s ease, filter .16s ease;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .pick:hover{ transform:translateY(-2px); filter:brightness(1.03); }
+    .pick small{ font-size:11px; opacity:.92; font-weight:700; }
+
+    .pick::after{
+      content:"Kliknij";
+      position:absolute;
+      bottom:8px;
+      font-size:10px;
+      letter-spacing:.15em;
+      opacity:.7;
+      text-transform:uppercase;
+    }
+
+    .footer-note{
+      margin-top:18px;
+      color:var(--muted);
+      font-size:13px;
+      text-align:center;
+    }
+
+    @media (max-width: 900px){
+      .hero{ grid-template-columns:1fr; }
+      .shop{ grid-template-columns:1fr; }
+      .string{ height:auto; min-height:108px; padding:18px 10px; }
+      .string::before{ top:50%; }
+      .beads{ flex-wrap:wrap; }
+    }
+  </style>
 </head>
 <body>
-  <h1>My bracelets</h1>
+  <div class="wrap">
+    <section class="hero">
+      <div class="panel hero-left">
+        <div class="badge">✨ Custom bracelet builder</div>
+        <h1>Zaprojektuj własną bransoletkę</h1>
+        <p class="lead">
+          Wybieraj kulki, układaj je na sznurku i stwórz dokładnie taki styl, jaki chcesz.
+          Jedyna opcja to <strong>Custom</strong> — max 10 kulek.
+        </p>
+
+        <div class="stats">
+          <div class="stat">
+            <strong id="count">0 / 10</strong>
+            <span>Wybrane kulki</span>
+          </div>
+          <div class="stat">
+            <strong>Custom</strong>
+            <span>Jedyny wariant</span>
+          </div>
+          <div class="stat">
+            <strong>Premium</strong>
+            <span>Nowoczesny design</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel hero-right">
+        <div class="bracelet-stage">
+          <div class="bracelet-label">
+            <span>Twoja bransoletka</span>
+            <span id="status">Gotowa do składania</span>
+          </div>
+
+          <div class="string">
+            <div class="empty-note" id="emptyNote">Kliknij kulki poniżej, aby dodać je do bransoletki</div>
+            <div class="beads" id="bracelet"></div>
+          </div>
+
+          <div class="controls" style="margin-top:18px;">
+            <button class="button primary" id="clearBtn">Wyczyść</button>
+            <button class="button ghost" id="undoBtn">Usuń ostatnią</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="shop panel" style="padding:22px; margin-top:22px;">
+      <div class="card">
+        <h2>Kulki do wyboru</h2>
+        <p>Kliknij dowolną kulkę, a pojawi się na bransoletce. Gdy dojdziesz do 10, więcej nie da się dodać.</p>
+        <div class="bead-grid" id="beadGrid"></div>
+      </div>
+
+      <div class="card">
+        <h2>Jak to działa</h2>
+        <p>To jest prosta wersja sklepu: klient klika kulki, buduje własny projekt i widzi efekt od razu na ekranie.</p>
+        <p>Potem możemy dorobić cenę, warianty kolorów, zapis zamówienia i przycisk „Kup teraz”.</p>
+      </div>
+    </section>
+
+    <div class="footer-note">Limit: 10 kulek • Custom only • Design pod mobile i desktop</div>
+  </div>
+
+  <script>
+    const beadOptions = [
+      { name: "Perła", emoji: "⚪", color: "linear-gradient(135deg, #f8fafc, #dbeafe)" },
+      { name: "Róż", emoji: "💗", color: "linear-gradient(135deg, #f472b6, #fb7185)" },
+      { name: "Lila", emoji: "💜", color: "linear-gradient(135deg, #a78bfa, #8b5cf6)" },
+      { name: "Mięta", emoji: "💚", color: "linear-gradient(135deg, #34d399, #10b981)" },
+      { name: "Gold", emoji: "✨", color: "linear-gradient(135deg, #fbbf24, #f59e0b)" },
+      { name: "Blue", emoji: "🔵", color: "linear-gradient(135deg, #60a5fa, #2563eb)" },
+      { name: "Cherry", emoji: "🍒", color: "linear-gradient(135deg, #fb7185, #e11d48)" },
+      { name: "Sun", emoji: "🌞", color: "linear-gradient(135deg, #fde047, #f59e0b)" },
+      { name: "Black", emoji: "⚫", color: "linear-gradient(135deg, #334155, #0f172a)" },
+      { name: "Candy", emoji: "🍬", color: "linear-gradient(135deg, #f9a8d4, #c084fc)" }
+    ];
+
+    const MAX_BEADS = 10;
+    const bracelet = document.getElementById("bracelet");
+    const beadGrid = document.getElementById("beadGrid");
+    const count = document.getElementById("count");
+    const status = document.getElementById("status");
+    const emptyNote = document.getElementById("emptyNote");
+    const clearBtn = document.getElementById("clearBtn");
+    const undoBtn = document.getElementById("undoBtn");
+
+    let selected = [];
+
+    function renderGrid() {
+      beadGrid.innerHTML = "";
+      beadOptions.forEach((bead, index) => {
+        const btn = document.createElement("button");
+        btn.className = "pick";
+        btn.style.background = bead.color;
+        btn.innerHTML = `<div style="font-size:28px; line-height:1;">${bead.emoji}</div><small>${bead.name}</small>`;
+        btn.addEventListener("click", () => addBead(index));
+        beadGrid.appendChild(btn);
+      });
+    }
+
+    function renderBracelet() {
+      bracelet.innerHTML = "";
+      selected.forEach((bead, index) => {
+        const el = document.createElement("div");
+        el.className = "bead-slot";
+        el.style.background = bead.color;
+        el.title = `Kliknij, aby usunąć: ${bead.name}`;
+        el.textContent = bead.emoji;
+        el.addEventListener("click", () => {
+          selected.splice(index, 1);
+          renderBracelet();
+        });
+        bracelet.appendChild(el);
+      });
+
+      count.textContent = `${selected.length} / ${MAX_BEADS}`;
+      emptyNote.style.display = selected.length ? "none" : "grid";
+      status.textContent = selected.length < MAX_BEADS ? "Składaj dalej" : "Limit osiągnięty";
+
+      const full = selected.length >= MAX_BEADS;
+      document.querySelectorAll(".pick").forEach(btn => btn.disabled = full);
+      undoBtn.disabled = selected.length === 0;
+      clearBtn.disabled = selected.length === 0;
+    }
+
+    function addBead(index) {
+      if (selected.length >= MAX_BEADS) return;
+      selected.push(beadOptions[index]);
+      renderBracelet();
+    }
+
+    clearBtn.addEventListener("click", () => {
+      selected = [];
+      renderBracelet();
+    });
+
+    undoBtn.addEventListener("click", () => {
+      selected.pop();
+      renderBracelet();
+    });
+
+    renderGrid();
+    renderBracelet();
+  </script>
 </body>
 </html>
