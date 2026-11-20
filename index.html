@@ -2,253 +2,319 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <title>MiniBlox Studio & Player</title>
+    <title>MiniBlox 3D Studio & Player</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; user-select: none; }
         body { display: flex; flex-direction: column; height: 100vh; background: #1e1e1e; color: white; overflow: hidden; }
         
-        /* Pasek górny (Menu) */
+        /* Górny pasek */
         #toolbar {
             height: 50px; background: #2d2d30; display: flex; align-items: center; padding: 0 15px; gap: 10px;
-            border-bottom: 2px solid #007acc;
+            border-bottom: 2px solid #00a2ff; z-index: 5;
         }
-        .logo { font-weight: bold; font-size: 18px; color: #00a2ff; margin-right: 20px; }
+        .logo { font-weight: bold; font-size: 18px; color: #00a2ff; margin-right: 15px; }
         button {
             background: #3e3e42; color: white; border: none; padding: 8px 14px; border-radius: 4px;
-            cursor: pointer; font-weight: 600; transition: 0.2s;
+            cursor: pointer; font-weight: bold; transition: 0.15s;
         }
-        button:hover { background: #505055; }
+        button:hover { background: #55555b; }
         .btn-play { background: #28a745; }
         .btn-play:hover { background: #218838; }
         .btn-stop { background: #dc3545; display: none; }
         .btn-stop:hover { background: #c82333; }
-        
-        /* Główny obszar roboczy */
+
+        /* Główny układ */
         #workspace { display: flex; flex: 1; height: calc(100vh - 50px); }
-        
-        /* Okno gry 3D */
-        #viewport { flex: 2; position: relative; background: #87CEEB; }
+        #viewport { flex: 1; position: relative; background: #87CEEB; overflow: hidden; }
+        canvas { display: block; width: 100%; height: 100%; cursor: grab; }
+        canvas:active { cursor: grabbing; }
+
         #hud {
-            position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.6);
-            padding: 10px; border-radius: 5px; pointer-events: none; font-size: 14px;
+            position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.7);
+            padding: 10px 14px; border-radius: 6px; pointer-events: none; font-size: 13px; line-height: 1.5;
         }
         #win-screen {
-            position: absolute; inset: 0; background: rgba(0,0,0,0.8); display: none;
+            position: absolute; inset: 0; background: rgba(0,0,0,0.85); display: none;
             flex-direction: column; justify-content: center; align-items: center; z-index: 10;
         }
         #win-screen h1 { color: #ffd700; font-size: 48px; margin-bottom: 10px; }
 
-        /* Panel boczny (Właściwości i Kodowanie) */
+        /* Prawy panel */
         #sidebar {
-            flex: 1; max-width: 400px; background: #252526; border-left: 1px solid #3e3e42;
+            width: 340px; background: #252526; border-left: 1px solid #3e3e42;
             display: flex; flex-direction: column; padding: 15px; gap: 15px; overflow-y: auto;
         }
         .panel-box { background: #1e1e1e; padding: 12px; border-radius: 6px; border: 1px solid #333; }
-        h3 { font-size: 14px; text-transform: uppercase; color: #aaa; margin-bottom: 10px; }
-        
-        .prop-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 14px; }
-        input[type="color"], input[type="number"], select {
-            background: #333; color: white; border: 1px solid #555; padding: 4px; border-radius: 3px;
+        h3 { font-size: 13px; text-transform: uppercase; color: #00a2ff; margin-bottom: 10px; }
+        .prop-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 13px; }
+        input[type="number"], input[type="color"] {
+            background: #333; color: white; border: 1px solid #555; padding: 4px; border-radius: 3px; width: 80px;
         }
-        
-        /* Edytor prostego kodu */
         textarea {
-            width: 100%; height: 140px; background: #121212; color: #9cdcfe; font-family: 'Consolas', monospace;
-            padding: 10px; border: 1px solid #444; border-radius: 4px; resize: none; font-size: 13px;
+            width: 100%; height: 110px; background: #121212; color: #9cdcfe; font-family: monospace;
+            padding: 8px; border: 1px solid #444; border-radius: 4px; resize: none; font-size: 13px;
         }
         .code-helpers { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
-        .code-btn { font-size: 11px; padding: 4px 8px; background: #007acc; }
+        .code-btn { font-size: 11px; padding: 5px 8px; background: #007acc; }
     </style>
-    <!-- Biblioteka 3D Three.js -->
-    <script src="https://cloudflare.com"></script>
 </head>
 <body>
 
-    <!-- GÓRNE MENU -->
     <div id="toolbar">
-        <div class="logo">🟦 MiniBlox Studio</div>
-        <button id="btn-add-block" onclick="addBlock()">+ Dodaj Klocek</button>
-        <button id="btn-del-block" onclick="deleteSelected()">🗑️ Usuń Zaznaczony</button>
+        <div class="logo">🟦 MiniBlox 3D</div>
+        <button onclick="addBlock()">+ Dodaj Klocek</button>
+        <button onclick="deleteSelected()">🗑️ Usuń</button>
         <div style="flex:1"></div>
         <button id="btn-play" class="btn-play" onclick="startGame()">▶ GRAJ (Testuj)</button>
         <button id="btn-stop" class="btn-stop" onclick="stopGame()">⏹ STOP (Edytuj)</button>
     </div>
 
-    <!-- OBSZAR ROBOCZY -->
     <div id="workspace">
-        <!-- EKRAN 3D -->
         <div id="viewport">
+            <canvas id="gameCanvas"></canvas>
             <div id="hud">
-                <b>Tryb Edycji:</b> Kliknij klocek, by go zaznaczyć. Użyj panelu po prawej, by go przesunąć lub oskryptować.<br>
-                <b>Tryb Gry:</b> W, A, S, D - ruch | Spacja - skok
+                <b>Kamera 3D:</b> Przytrzymaj PRAWY przycisk myszy i ruszaj, aby obracać.<br>
+                <b>Edytor:</b> Kliknij LEWYM przyciskiem na klocek, by go zaznaczyć.<br>
+                <b>Gra:</b> W, A, S, D - chodzenie | Spacja - skok
             </div>
             <div id="win-screen">
                 <h1>🎉 WYGRANA! 🎉</h1>
-                <p>Ukończyłeś swój poziom!</p><br>
+                <p>Ukończyłeś swój tor przeszkód!</p><br>
                 <button class="btn-stop" style="display:block" onclick="stopGame()">Wróć do edytora</button>
             </div>
         </div>
 
-        <!-- PANEL PRAWY -->
         <div id="sidebar">
-            <!-- Właściwości klocka -->
-            <div class="panel-box" id="props-panel">
-                <h3>Właściwości Obiektu</h3>
-                <p id="no-selection" style="color:#777; font-size:13px;">Kliknij dowolny klocek na scenie 3D...</p>
+            <div class="panel-box">
+                <h3>Właściwości Klocka 3D</h3>
+                <p id="no-selection" style="color:#888; font-size:13px;">Kliknij dowolny klocek na ekranie...</p>
                 <div id="selection-controls" style="display:none;">
-                    <div class="prop-row">
-                        <span>Kolor:</span>
-                        <input type="color" id="prop-color" onchange="updateProp()">
-                    </div>
-                    <div class="prop-row">
-                        <span>Pozycja X:</span>
-                        <input type="number" id="prop-x" step="1" onchange="updateProp()">
-                    </div>
-                    <div class="prop-row">
-                        <span>Pozycja Y (Wysokość):</span>
-                        <input type="number" id="prop-y" step="1" onchange="updateProp()">
-                    </div>
-                    <div class="prop-row">
-                        <span>Pozycja Z:</span>
-                        <input type="number" id="prop-z" step="1" onchange="updateProp()">
-                    </div>
-                    <div class="prop-row">
-                        <span>Szerokość (X):</span>
-                        <input type="number" id="prop-sx" min="1" step="1" onchange="updateProp()">
-                    </div>
-                    <div class="prop-row">
-                        <span>Długość (Z):</span>
-                        <input type="number" id="prop-sz" min="1" step="1" onchange="updateProp()">
-                    </div>
+                    <div class="prop-row"><span>Kolor:</span><input type="color" id="prop-color" onchange="updateProp()"></div>
+                    <div class="prop-row"><span>Pozycja X:</span><input type="number" id="prop-x" step="1" onchange="updateProp()"></div>
+                    <div class="prop-row"><span>Pozycja Y (Góra):</span><input type="number" id="prop-y" step="1" onchange="updateProp()"></div>
+                    <div class="prop-row"><span>Pozycja Z:</span><input type="number" id="prop-z" step="1" onchange="updateProp()"></div>
+                    <div class="prop-row"><span>Szerokość (X):</span><input type="number" id="prop-sx" min="1" step="1" onchange="updateProp()"></div>
+                    <div class="prop-row"><span>Wysokość (Y):</span><input type="number" id="prop-sy" min="0.5" step="0.5" onchange="updateProp()"></div>
+                    <div class="prop-row"><span>Długość (Z):</span><input type="number" id="prop-sz" min="1" step="1" onchange="updateProp()"></div>
                 </div>
             </div>
 
-            <!-- Łatwe kodowanie -->
-            <div class="panel-box" id="code-panel">
-                <h3>Łatwy Skrypt (Kodowanie Klocka)</h3>
-                <p style="font-size:12px; color:#aaa; margin-bottom:8px;">
-                    Wpisz proste polecenia dla zaznaczonego klocka (jedno pod drugim):
-                </p>
-                <textarea id="block-code" placeholder="Wybierz klocek i kliknij przyciski poniżej..." oninput="saveCode()"></textarea>
-                
+            <div class="panel-box">
+                <h3>Łatwe Kodowanie (Skrypt)</h3>
+                <p style="font-size:12px; color:#aaa; margin-bottom:6px;">Kliknij przycisk, aby nadać klockowi moc:</p>
+                <textarea id="block-code" placeholder="Wybierz klocek..." oninput="saveCode()" disabled></textarea>
                 <div class="code-helpers">
-                    <button class="code-btn" onclick="insertCode('OBRACAJ')">+ Obracaj</button>
                     <button class="code-btn" onclick="insertCode('LATAJ')">+ Lataj góra-dół</button>
-                    <button class="code-btn" onclick="insertCode('LAWA')">+ Lawa (Resetuje gracza)</button>
-                    <button class="code-btn" onclick="insertCode('META')">+ Meta (Wygrana)</button>
+                    <button class="code-btn" onclick="insertCode('PRZESUWAJ')">+ Lataj lewo-prawo</button>
+                    <button class="code-btn" onclick="insertCode('LAWA')">+ Lawa (Śmierć)</button>
                     <button class="code-btn" onclick="insertCode('TRAMPOLINA')">+ Trampolina</button>
+                    <button class="code-btn" onclick="insertCode('META')">+ Meta (Wygrana)</button>
                 </div>
             </div>
         </div>
     </div>
 
 <script>
-    // --- INICJALIZACJA SILNIKA 3D ---
-    const viewport = document.getElementById('viewport');
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x87CEEB); // Niebo
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
 
-    const camera = new THREE.PerspectiveCamera(60, viewport.clientWidth / viewport.clientHeight, 0.1, 1000);
-    camera.position.set(0, 12, 18);
-    camera.lookAt(0, 0, 0);
+// --- STAN APLIKACJI I KAMERA 3D ---
+let blocks = [];
+let selectedBlock = null;
+let isPlaying = false;
+let time = 0;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(viewport.clientWidth, viewport.clientHeight);
-    viewport.appendChild(renderer.domElement);
+// Kamera sferyczna
+let camYaw = 0.4;
+let camPitch = 0.45;
+let camDist = 22;
+let camTarget = { x: 0, y: 1, z: -6 };
 
-    // Światło
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-    scene.add(ambientLight);
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    dirLight.position.set(10, 20, 10);
-    scene.add(dirLight);
+// Gracz
+let player = { x: 0, y: 3, z: 0, vx: 0, vy: 0, vz: 0, sx: 1, sy: 2, sz: 1, canJump: false };
+const keys = {};
 
-    // Siatka pomocnicza w edytorze
-    const gridHelper = new THREE.GridHelper(40, 40);
-    scene.add(gridHelper);
+// --- POZIOM STARTOWY ---
+function initLevel() {
+    blocks = [
+        { x: 0, y: 0, z: 0, sx: 8, sy: 1, sz: 8, color: '#4caf50', code: '', startX: 0, startY: 0 },
+        { x: 0, y: 1, z: -8, sx: 4, sy: 1, sz: 4, color: '#ff9800', code: 'LATAJ', startX: 0, startY: 1 },
+        { x: 0, y: 2, z: -15, sx: 6, sy: 0.5, sz: 2, color: '#f44336', code: 'LAWA', startX: 0, startY: 2 },
+        { x: 0, y: 2, z: -21, sx: 4, sy: 1, sz: 4, color: '#00bcd4', code: 'TRAMPOLINA', startX: 0, startY: 2 },
+        { x: 0, y: 6, z: -28, sx: 6, sy: 1, sz: 6, color: '#ffd700', code: 'META', startX: 0, startY: 6 }
+    ];
+}
+initLevel();
 
-    // Zmienne platformy
-    let blocks = [];
-    let selectedBlock = null;
-    let isPlaying = false;
+// --- SILNIK PROJEKCJI 3D NA 2D ---
+function project3D(x, y, z) {
+    // Przesunięcie względem celu kamery
+    let dx = x - camTarget.x;
+    let dy = y - camTarget.y;
+    let dz = z - camTarget.z;
 
-    // --- TWORZENIE KLOCKÓW ---
-    function createBlock(x, y, z, sx, sy, sz, color, code = "") {
-        const geo = new THREE.BoxGeometry(1, 1, 1);
-        const mat = new THREE.MeshLambertMaterial({ color: color });
-        const mesh = new THREE.Mesh(geo, mat);
-        
-        mesh.position.set(x, y, z);
-        mesh.scale.set(sx, sy, sz);
-        
-        // Dane gry przypisane do klocka
-        mesh.userData = {
-            code: code,
-            startY: y,
-            origColor: color
-        };
+    // Obrót Y (Yaw)
+    let cosY = Math.cos(camYaw), sinY = Math.sin(camYaw);
+    let x1 = dx * cosY - dz * sinY;
+    let z1 = dx * sinY + dz * cosY;
 
-        scene.add(mesh);
-        blocks.push(mesh);
-        return mesh;
-    }
+    // Obrót X (Pitch)
+    let cosP = Math.cos(camPitch), sinP = Math.sin(camPitch);
+    let y2 = dy * cosP - z1 * sinP;
+    let z2 = dy * sinP + z1 * cosP + camDist;
 
-    // Domyślny poziom startowy (mini Obby)
-    createBlock(0, -0.5, 0, 10, 1, 10, "#4caf50", ""); // Start
-    createBlock(0, 0.5, -8, 4, 1, 4, "#ff9800", "LATAJ"); // Ruchoma platforma
-    createBlock(0, 1.5, -15, 6, 0.5, 2, "#f44336", "LAWA"); // Przeszkoda lawa
-    createBlock(0, 1.5, -21, 5, 1, 5, "#ffd700", "META\nOBRACAJ"); // Meta
+    if (z2 <= 0.2) return null; // Za kamerą
 
-    function addBlock() {
-        if (isPlaying) return;
-        const b = createBlock(0, 1, -4, 3, 1, 3, "#2196f3", "");
-        selectBlock(b);
-    }
+    let fov = 550;
+    let scale = fov / z2;
+    return {
+        x: canvas.width / 2 + x1 * scale,
+        y: canvas.height / 2 - y2 * scale,
+        z: z2
+    };
+}
 
-    function deleteSelected() {
-        if (!selectedBlock || isPlaying) return;
-        scene.remove(selectedBlock);
-        blocks = blocks.filter(b => b !== selectedBlock);
-        selectedBlock = null;
-        updateUI();
-    }
+// Przyciemnianie koloru dla efektu cienia 3D na ścianach
+function shadeColor(hex, percent) {
+    let num = parseInt(hex.replace("#",""), 16),
+        amt = Math.round(2.55 * percent),
+        R = (num >> 16) + amt,
+        G = (num >> 8 & 0x00FF) + amt,
+        B = (num & 0x0000FF) + amt;
+    return "#" + (0x1000000 + (R<255?R<1?0:R:255)*0x10000 + (G<255?G<1?0:G:255)*0x100 + (B<255?B<1?0:B:255)).toString(16).slice(1);
+}
 
-    // --- ZAZNACZANIE MYSZKĄ ---
-    const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
+// Generowanie 6 ścian prostopadłościanu 3D
+function getBoxFaces(box, isSelected = false) {
+    let hx = box.sx / 2, hy = box.sy / 2, hz = box.sz / 2;
+    let v = [
+        { x: box.x - hx, y: box.y - hy, z: box.z - hz }, // 0
+        { x: box.x + hx, y: box.y - hy, z: box.z - hz }, // 1
+        { x: box.x + hx, y: box.y + hy, z: box.z - hz }, // 2
+        { x: box.x - hx, y: box.y + hy, z: box.z - hz }, // 3
+        { x: box.x - hx, y: box.y - hy, z: box.z + hz }, // 4
+        { x: box.x + hx, y: box.y - hy, z: box.z + hz }, // 5
+        { x: box.x + hx, y: box.y + hy, z: box.z + hz }, // 6
+        { x: box.x - hx, y: box.y + hy, z: box.z + hz }  // 7
+    ];
 
-    viewport.addEventListener('mousedown', (e) => {
-        if (isPlaying) return;
-        const rect = renderer.getBoundingClientRect();
-        mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-        mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    let p = v.map(pt => project3D(pt.x, pt.y, pt.z));
+    if (p.some(pt => pt === null)) return [];
 
-        raycaster.setFromCamera(mouse, camera);
-        const intersects = raycaster.intersectObjects(blocks);
+    const facesDef = [
+        { idx:, shade: 15 },   // Góra (najjaśniejsza)
+        { idx:, shade: -35 },  // Dół
+        { idx:, shade: 0 },    // Przód
+        { idx:, shade: -15 },  // Tył
+        { idx:, shade: -10 },  // Prawo
+        { idx:, shade: -20 }   // Lewo
+    ];
 
-if (intersects.length > 0) {
-selectBlock(intersects[0].object);
-} else {
-selectBlock(null);
+    return facesDef.map(f => {
+        let pts = f.idx.map(i => p[i]);
+let avgZ = pts.reduce((sum, pt) => sum + pt.z, 0) / 4;
+return {
+pts: pts,
+z: avgZ,
+color: shadeColor(box.color, f.shade),
+box: box,
+isSelected: isSelected
+};
+});
+}
+// --- RYSOWANIE SCENY ---
+function render() {
+canvas.width = canvas.parentElement.clientWidth;
+canvas.height = canvas.parentElement.clientHeight;
+// Tło (Niebo)
+ctx.fillStyle = "#87CEEB";
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+// Siatka podłogi w edytorze
+if (!isPlaying) {
+ctx.strokeStyle = "rgba(255, 255, 255, 0.35)";
+ctx.lineWidth = 1;
+for (let i = -20; i <= 20; i += 2) {
+let p1 = project3D(i, -0.5, -35), p2 = project3D(i, -0.5, 10);
+if (p1 && p2) { ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke(); }
+let p3 = project3D(-20, -0.5, i - 10), p4 = project3D(20, -0.5, i - 10);
+if (p3 && p4) { ctx.beginPath(); ctx.moveTo(p3.x, p3.y); ctx.lineTo(p4.x, p4.y); ctx.stroke(); }
+}
+}
+// Zbieranie wszystkich ścian 3D (klocki + gracz)
+let allFaces = [];
+blocks.forEach(b => {
+allFaces.push(...getBoxFaces(b, b === selectedBlock));
+});
+if (isPlaying) {
+// Postać gracza (niebieski tułów + żółta głowa jak w Roblox)
+allFaces.push(...getBoxFaces({ x: player.x, y: player.y - 0.25, z: player.z, sx: 1, sy: 1.3, sz: 0.6, color: '#007acc' }));
+allFaces.push(...getBoxFaces({ x: player.x, y: player.y + 0.7, z: player.z, sx: 0.7, sy: 0.7, sz: 0.7, color: '#ffeb3b' }));
+}
+// Sortowanie od najdalszych ścian (Painter's Algorithm)
+allFaces.sort((a, b) => b.z - a.z);
+// Rysowanie ścian
+window.renderedFaces = allFaces; // Do wykrywania kliknięć myszą
+allFaces.forEach(f => {
+ctx.beginPath();
+ctx.moveTo(f.pts[0].x, f.pts[0].y);
+for (let i = 1; i < 4; i++) ctx.lineTo(f.pts[i].x, f.pts[i].y);
+ctx.closePath();
+ctx.fillStyle = f.color;
+ctx.fill();
+ctx.strokeStyle = f.isSelected ? "#ffffff" : "rgba(0,0,0,0.25)";
+ctx.lineWidth = f.isSelected ? 2.5 : 1;
+ctx.stroke();
+});
+}
+// --- OBSŁUGA MYSZY (KAMERA + ZAZNACZANIE) ---
+let isDragging = false, lastMouse = { x: 0, y: 0 };
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+canvas.addEventListener('mousedown', e => {
+if (e.button === 2 || e.button === 1) {
+isDragging = true;
+lastMouse = { x: e.clientX, y: e.clientY };
+} else if (e.button === 0 && !isPlaying) {
+// Sprawdzanie kliknięcia w klocek
+const rect = canvas.getBoundingClientRect();
+const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+let hit = null;
+// Szukamy od najbliższych ścian
+for (let i = window.renderedFaces.length - 1; i >= 0; i--) {
+let f = window.renderedFaces[i];
+if (f.box && pointInPoly(mx, my, f.pts)) {
+hit = f.box;
+break;
+}
+}
+selectBlock(hit);
 }
 });
-function selectBlock(block) {
-// Przywróć ramkę/kolor poprzedniego
-if (selectedBlock) {
-selectedBlock.material.emissive.setHex(0x000000);
+window.addEventListener('mousemove', e => {
+if (!isDragging) return;
+camYaw -= (e.clientX - lastMouse.x) * 0.008;
+camPitch = Math.max(0.1, Math.min(1.4, camPitch + (e.clientY - lastMouse.y) * 0.008));
+lastMouse = { x: e.clientX, y: e.clientY };
+});
+window.addEventListener('mouseup', () => isDragging = false);
+canvas.addEventListener('wheel', e => {
+camDist = Math.max(6, Math.min(50, camDist + e.deltaY * 0.01));
+});
+function pointInPoly(x, y, pts) {
+let inside = false;
+for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+let xi = pts[i].x, yi = pts[i].y, xj = pts[j].x, yj = pts[j].y;
+let intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+if (intersect) inside = !inside;
 }
-selectedBlock = block;
-if (selectedBlock) {
-selectedBlock.material.emissive.setHex(0x333333); // Podświetlenie
+return inside;
 }
-updateUI();
-}
-// --- AKTUALIZACJA INTERFEJSU ---
-function updateUI() {
+// --- EDYTOR I UI ---
+function selectBlock(b) {
+selectedBlock = b;
 const noSel = document.getElementById('no-selection');
 const ctrls = document.getElementById('selection-controls');
 const codeArea = document.getElementById('block-code');
-if (!selectedBlock) {
+if (!b) {
 noSel.style.display = 'block';
 ctrls.style.display = 'none';
 codeArea.value = "";
@@ -258,30 +324,40 @@ return;
 noSel.style.display = 'none';
 ctrls.style.display = 'block';
 codeArea.disabled = false;
-document.getElementById('prop-color').value = selectedBlock.userData.origColor;
-document.getElementById('prop-x').value = selectedBlock.position.x;
-document.getElementById('prop-y').value = selectedBlock.position.y;
-document.getElementById('prop-z').value = selectedBlock.position.z;
-document.getElementById('prop-sx').value = selectedBlock.scale.x;
-document.getElementById('prop-sz').value = selectedBlock.scale.z;
-codeArea.value = selectedBlock.userData.code;
+document.getElementById('prop-color').value = b.color;
+document.getElementById('prop-x').value = b.x;
+document.getElementById('prop-y').value = b.y;
+document.getElementById('prop-z').value = b.z;
+document.getElementById('prop-sx').value = b.sx;
+document.getElementById('prop-sy').value = b.sy;
+document.getElementById('prop-sz').value = b.sz;
+codeArea.value = b.code;
 }
 function updateProp() {
 if (!selectedBlock) return;
-const col = document.getElementById('prop-color').value;
-selectedBlock.material.color.set(col);
-selectedBlock.userData.origColor = col;
-selectedBlock.position.x = parseFloat(document.getElementById('prop-x').value) || 0;
-selectedBlock.position.y = parseFloat(document.getElementById('prop-y').value) || 0;
-selectedBlock.position.z = parseFloat(document.getElementById('prop-z').value) || 0;
-selectedBlock.userData.startY = selectedBlock.position.y;
-selectedBlock.scale.x = parseFloat(document.getElementById('prop-sx').value) || 1;
-selectedBlock.scale.z = parseFloat(document.getElementById('prop-sz').value) || 1;
+selectedBlock.color = document.getElementById('prop-color').value;
+selectedBlock.x = parseFloat(document.getElementById('prop-x').value) || 0;
+selectedBlock.y = parseFloat(document.getElementById('prop-y').value) || 0;
+selectedBlock.z = parseFloat(document.getElementById('prop-z').value) || 0;
+selectedBlock.startX = selectedBlock.x;
+selectedBlock.startY = selectedBlock.y;
+selectedBlock.sx = parseFloat(document.getElementById('prop-sx').value) || 1;
+selectedBlock.sy = parseFloat(document.getElementById('prop-sy').value) || 1;
+selectedBlock.sz = parseFloat(document.getElementById('prop-sz').value) || 1;
+}
+function addBlock() {
+if (isPlaying) return;
+const b = { x: 0, y: 1, z: -4, sx: 3, sy: 1, sz: 3, color: '#2196f3', code: '', startX: 0, startY: 1 };
+blocks.push(b);
+selectBlock(b);
+}
+function deleteSelected() {
+if (!selectedBlock || isPlaying) return;
+blocks = blocks.filter(b => b !== selectedBlock);
+selectBlock(null);
 }
 function saveCode() {
-if (selectedBlock) {
-selectedBlock.userData.code = document.getElementById('block-code').value;
-}
+if (selectedBlock) selectedBlock.code = document.getElementById('block-code').value;
 }
 function insertCode(cmd) {
 if (!selectedBlock) return;
@@ -289,119 +365,78 @@ const area = document.getElementById('block-code');
 area.value += (area.value ? "\n" : "") + cmd;
 saveCode();
 }
-// --- GRACZ I TRYB GRY (ROBLOX PLAYER) ---
-const playerGeo = new THREE.BoxGeometry(1, 2, 1);
-const playerMat = new THREE.MeshLambertMaterial({ color: 0x00a2ff });
-const player = new THREE.Mesh(playerGeo, playerMat);
-player.visible = false;
-scene.add(player);
-let playerVel = new THREE.Vector3();
-let canJump = false;
-const keys = {};
+// --- TRYB GRY (FIZYKA I STEROWANIE) ---
 window.addEventListener('keydown', e => keys[e.code] = true);
 window.addEventListener('keyup', e => keys[e.code] = false);
 function startGame() {
 isPlaying = true;
 selectBlock(null);
-gridHelper.visible = false;
 document.getElementById('btn-play').style.display = 'none';
 document.getElementById('btn-stop').style.display = 'block';
 document.getElementById('win-screen').style.display = 'none';
-// Reset pozycji gracza
-player.position.set(0, 3, 0);
-playerVel.set(0, 0, 0);
-player.visible = true;
+resetPlayer();
 }
 function stopGame() {
 isPlaying = false;
-gridHelper.visible = true;
-player.visible = false;
 document.getElementById('btn-play').style.display = 'block';
 document.getElementById('btn-stop').style.display = 'none';
 document.getElementById('win-screen').style.display = 'none';
-// Przywrócenie pozycji klocków
+blocks.forEach(b => { b.x = b.startX; b.y = b.startY; });
+camTarget = { x: 0, y: 1, z: -6 };
+}
+function resetPlayer() {
+player.x = 0; player.y = 3; player.z = 0;
+player.vy = 0;
+}
+function updatePhysics() {
+time += 0.03;
+// Wykonywanie skryptów klocków
 blocks.forEach(b => {
-b.position.y = b.userData.startY;
-b.rotation.set(0, 0, 0);
+const code = b.code.toUpperCase();
+if (code.includes("LATAJ")) b.y = b.startY + Math.sin(time) * 2;
+if (code.includes("PRZESUWAJ")) b.x = b.startX + Math.sin(time) * 3;
 });
-camera.position.set(0, 12, 18);
-camera.lookAt(0, 0, 0);
-}
-// --- GŁÓWNA PĘTLA GRY I FIZYKI ---
-let clock = new THREE.Clock();
-function animate() {
-requestAnimationFrame(animate);
-const time = clock.getElapsedTime();
-if (isPlaying) {
-// 1. Wykonywanie prostego kodu klocków
-blocks.forEach(b => {
-const code = b.userData.code.toUpperCase();
-if (code.includes("OBRACAJ")) {
-b.rotation.y += 0.03;
-}
-if (code.includes("LATAJ")) {
-b.position.y = b.userData.startY + Math.sin(time * 2) * 2;
-}
-});
-// 2. Sterowanie graczem
-const speed = 0.15;
-if (keys['KeyW'] || keys['ArrowUp']) player.position.z -= speed;
-if (keys['KeyS'] || keys['ArrowDown']) player.position.z += speed;
-if (keys['KeyA'] || keys['ArrowLeft']) player.position.x -= speed;
-if (keys['KeyD'] || keys['ArrowRight']) player.position.x += speed;
-if (keys['Space'] && canJump) {
-playerVel.y = 0.35;
-canJump = false;
+// Ruch gracza
+const speed = 0.16;
+if (keys['KeyW'] || keys['ArrowUp']) player.z -= speed;
+if (keys['KeyS'] || keys['ArrowDown']) player.z += speed;
+if (keys['KeyA'] || keys['ArrowLeft']) player.x -= speed;
+if (keys['KeyD'] || keys['ArrowRight']) player.x += speed;
+if (keys['Space'] && player.canJump) {
+player.vy = 0.35;
+player.canJump = false;
 }
 // Grawitacja
-playerVel.y -= 0.015;
-player.position.y += playerVel.y;
-// Spadnięcie w przepaść
-if (player.position.y < -15) {
-player.position.set(0, 3, 0);
-playerVel.set(0, 0, 0);
-}
-// 3. Kolizje z klockami
-const playerBox = new THREE.Box3().setFromObject(player);
+player.vy -= 0.015;
+player.y += player.vy;
+if (player.y < -15) resetPlayer();
+// Kolizje AABB
 blocks.forEach(b => {
-const blockBox = new THREE.Box3().setFromObject(b);
-if (playerBox.intersectsBox(blockBox)) {
-const code = b.userData.code.toUpperCase();
-// Reakcje na kod klocka
-if (code.includes("LAWA")) {
-player.position.set(0, 3, 0);
-playerVel.set(0, 0, 0);
-return;
-}
-if (code.includes("META")) {
-document.getElementById('win-screen').style.display = 'flex';
-return;
-}
-if (code.includes("TRAMPOLINA")) {
-playerVel.y = 0.6;
-canJump = false;
-return;
-}
-// Lądowanie na klocku od góry
-if (playerVel.y <= 0 && player.position.y - 0.8 >= b.position.y) {
-player.position.y = blockBox.max.y + 1;
-playerVel.y = 0;
-canJump = true;
+let hitX = Math.abs(player.x - b.x) < (player.sx + b.sx) / 2;
+let hitY = Math.abs(player.y - b.y) < (player.sy + b.sy) / 2;
+let hitZ = Math.abs(player.z - b.z) < (player.sz + b.sz) / 2;
+if (hitX && hitY && hitZ) {
+const code = b.code.toUpperCase();
+if (code.includes("LAWA")) { resetPlayer(); return; }
+if (code.includes("META")) { document.getElementById('win-screen').style.display = 'flex'; return; }
+if (code.includes("TRAMPOLINA")) { player.vy = 0.55; player.canJump = false; return; }
+// Lądowanie na górze klocka
+if (player.vy <= 0 && player.y - player.sy/2 >= b.y) {
+player.y = b.y + b.sy/2 + player.sy/2;
+player.vy = 0;
+player.canJump = true;
 }
 }
 });
-// Kamera podąża za graczem (jak w Roblox)
-camera.position.x = player.position.x;
-camera.position.y = player.position.y + 5;
-camera.position.z = player.position.z + 10;
-camera.lookAt(player.position);
+// Kamera podąża za graczem
+camTarget.x = player.x;
+camTarget.y = player.y;
+camTarget.z = player.z;
 }
-renderer.render(scene, camera);
+// --- PĘTLA GŁÓWNA ---
+function loop() {
+if (isPlaying) updatePhysics();
+render();
+requestAnimationFrame(loop);
 }
-// Dopasowanie ekranu przy zmianie rozmiaru okna
-window.addEventListener('resize', () => {
-camera.aspect = viewport.clientWidth / viewport.clientHeight;
-camera.updateProjectionMatrix();
-renderer.setSize(viewport.clientWidth, viewport.clientHeight);
-});
-animate();
+loop();
