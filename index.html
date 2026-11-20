@@ -1,515 +1,407 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bransoletki Custom</title>
-  <style>
-    :root{
-      --bg: #f6f7fb;
-      --card: rgba(255,255,255,.82);
-      --text: #111827;
-      --muted: #6b7280;
-      --line: #ffffff;
-      --accent: #8b5cf6;
-      --accent2: #22c55e;
-      --shadow: 0 18px 50px rgba(15,23,42,.10);
-      --radius: 28px;
-    }
+    <meta charset="UTF-8">
+    <title>MiniBlox Studio & Player</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { display: flex; flex-direction: column; height: 100vh; background: #1e1e1e; color: white; overflow: hidden; }
+        
+        /* Pasek górny (Menu) */
+        #toolbar {
+            height: 50px; background: #2d2d30; display: flex; align-items: center; padding: 0 15px; gap: 10px;
+            border-bottom: 2px solid #007acc;
+        }
+        .logo { font-weight: bold; font-size: 18px; color: #00a2ff; margin-right: 20px; }
+        button {
+            background: #3e3e42; color: white; border: none; padding: 8px 14px; border-radius: 4px;
+            cursor: pointer; font-weight: 600; transition: 0.2s;
+        }
+        button:hover { background: #505055; }
+        .btn-play { background: #28a745; }
+        .btn-play:hover { background: #218838; }
+        .btn-stop { background: #dc3545; display: none; }
+        .btn-stop:hover { background: #c82333; }
+        
+        /* Główny obszar roboczy */
+        #workspace { display: flex; flex: 1; height: calc(100vh - 50px); }
+        
+        /* Okno gry 3D */
+        #viewport { flex: 2; position: relative; background: #87CEEB; }
+        #hud {
+            position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.6);
+            padding: 10px; border-radius: 5px; pointer-events: none; font-size: 14px;
+        }
+        #win-screen {
+            position: absolute; inset: 0; background: rgba(0,0,0,0.8); display: none;
+            flex-direction: column; justify-content: center; align-items: center; z-index: 10;
+        }
+        #win-screen h1 { color: #ffd700; font-size: 48px; margin-bottom: 10px; }
 
-    *{ box-sizing:border-box; }
-
-    body{
-      margin:0;
-      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background:
-        radial-gradient(circle at top left, #e9d5ff 0%, transparent 28%),
-        radial-gradient(circle at top right, #dbeafe 0%, transparent 22%),
-        linear-gradient(180deg, #ffffff 0%, var(--bg) 100%);
-      color: var(--text);
-      min-height: 100vh;
-    }
-
-    .wrap{
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 28px 18px 40px;
-    }
-
-    .hero{
-      display:grid;
-      grid-template-columns: 1fr 1.1fr;
-      gap: 22px;
-      align-items: stretch;
-    }
-
-    .panel{
-      background: var(--card);
-      border: 1px solid rgba(255,255,255,.7);
-      backdrop-filter: blur(18px);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-    }
-
-    .left{
-      padding: 30px;
-    }
-
-    .badge{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding: 10px 14px;
-      border-radius: 999px;
-      background: #f3e8ff;
-      color: #6d28d9;
-      font-weight: 800;
-      font-size: 13px;
-    }
-
-    h1{
-      margin: 18px 0 12px;
-      font-size: clamp(34px, 5vw, 62px);
-      line-height: .95;
-      letter-spacing: -.05em;
-    }
-
-    .lead{
-      margin: 0;
-      font-size: 18px;
-      line-height: 1.65;
-      color: var(--muted);
-      max-width: 56ch;
-    }
-
-    .stats{
-      margin-top: 22px;
-      display:flex;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .stat{
-      min-width: 145px;
-      padding: 14px 16px;
-      border-radius: 20px;
-      background: #fff;
-      border: 1px solid #edf0f7;
-    }
-
-    .stat strong{
-      display:block;
-      font-size: 20px;
-      margin-bottom: 4px;
-    }
-
-    .stat span{
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .right{
-      padding: 22px;
-      display:flex;
-      flex-direction:column;
-      gap: 16px;
-      justify-content:center;
-    }
-
-    .builder{
-      overflow:hidden;
-      padding: 18px;
-    }
-
-    .builder-top{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap: 10px;
-      margin-bottom: 14px;
-      font-size: 14px;
-      font-weight: 700;
-      color: #374151;
-    }
-
-    .builder-top .count{
-      color: #6d28d9;
-      font-weight: 900;
-    }
-
-    .bracelet-stage{
-      position: relative;
-      border-radius: 26px;
-      overflow: hidden;
-      background: #fff;
-      border: 1px solid #edf0f7;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,.4);
-    }
-
-    .bracelet-photo{
-      position: relative;
-      width: 100%;
-      aspect-ratio: 16 / 9;
-      overflow:hidden;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02)),
-        url('bracelet.jpg') center/cover no-repeat;
-    }
-
-    /* Jeśli nie masz jeszcze swojego zdjęcia, możesz zostawić ten placeholder */
-    .bracelet-photo.placeholder{
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.20), rgba(255,255,255,.02)),
-        radial-gradient(circle at center, #f8fafc 0%, #f1f5f9 42%, #e2e8f0 100%);
-    }
-
-    .photo-label{
-      position:absolute;
-      left: 16px;
-      top: 16px;
-      padding: 10px 12px;
-      border-radius: 999px;
-      background: rgba(255,255,255,.88);
-      backdrop-filter: blur(10px);
-      font-size: 13px;
-      font-weight: 800;
-      color: #111827;
-      border: 1px solid rgba(255,255,255,.75);
-    }
-
-    .overlay{
-      position:absolute;
-      inset:0;
-      pointer-events:none;
-    }
-
-    .string-line{
-      position:absolute;
-      left: 9%;
-      right: 9%;
-      top: 54%;
-      height: 5px;
-      border-radius: 999px;
-      background: linear-gradient(90deg, #f3f4f6, #d1d5db, #f3f4f6);
-      box-shadow: 0 0 0 1px rgba(255,255,255,.55);
-      opacity: .95;
-    }
-
-    .beads{
-      position:absolute;
-      left: 9%;
-      right: 9%;
-      top: 50%;
-      transform: translateY(-50%);
-      display:flex;
-      align-items:center;
-      gap: 10px;
-      justify-content:center;
-      flex-wrap: wrap;
-      padding: 0 10px;
-    }
-
-    .bead{
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
-      display:grid;
-      place-items:center;
-      font-size: 24px;
-      font-weight: 800;
-      cursor:pointer;
-      user-select:none;
-      border: 1px solid rgba(255,255,255,.75);
-      box-shadow:
-        inset 0 10px 18px rgba(255,255,255,.28),
-        inset 0 -10px 16px rgba(0,0,0,.16),
-        0 12px 24px rgba(15,23,42,.15);
-      transition: transform .16s ease, box-shadow .16s ease;
-      pointer-events:auto;
-    }
-
-    .bead:hover{
-      transform: translateY(-2px) scale(1.04);
-    }
-
-    .empty{
-      position:absolute;
-      inset:0;
-      display:grid;
-      place-items:center;
-      text-align:center;
-      color:#64748b;
-      font-weight:700;
-      font-size: 14px;
-      padding: 20px;
-    }
-
-    .controls{
-      display:flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-top: 14px;
-    }
-
-    .btn{
-      border:0;
-      cursor:pointer;
-      padding: 13px 18px;
-      border-radius: 16px;
-      font-weight: 800;
-      font-size: 14px;
-      transition: transform .15s ease, opacity .15s ease;
-    }
-
-    .btn:active{ transform: scale(.98); }
-
-    .primary{
-      color: white;
-      background: linear-gradient(135deg, #8b5cf6, #22c55e);
-      box-shadow: 0 14px 28px rgba(139,92,246,.18);
-    }
-
-    .ghost{
-      background: #fff;
-      color: #111827;
-      border: 1px solid #e5e7eb;
-    }
-
-    .btn:disabled{
-      opacity:.45;
-      cursor:not-allowed;
-    }
-
-    .shop{
-      margin-top: 22px;
-      padding: 22px;
-      display:grid;
-      grid-template-columns: 1fr;
-      gap: 18px;
-    }
-
-    .card{
-      background:#fff;
-      border:1px solid #edf0f7;
-      border-radius: 24px;
-      padding: 18px;
-    }
-
-    .card h2{
-      margin:0 0 6px;
-      font-size: 18px;
-    }
-
-    .card p{
-      margin:0 0 14px;
-      color: var(--muted);
-      line-height: 1.55;
-      font-size: 14px;
-    }
-
-    .bead-grid{
-      display:grid;
-      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-      gap: 10px;
-    }
-
-    .pick{
-      border:0;
-      border-radius: 20px;
-      min-height: 90px;
-      color:white;
-      font-weight: 900;
-      cursor:pointer;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      gap: 7px;
-      position:relative;
-      overflow:hidden;
-      box-shadow: 0 10px 22px rgba(15,23,42,.12);
-      transition: transform .15s ease;
-    }
-
-    .pick:hover{ transform: translateY(-2px); }
-    .pick small{
-      font-size: 11px;
-      opacity: .92;
-      font-weight: 700;
-    }
-
-    .pick::after{
-      content:"Kliknij";
-      position:absolute;
-      bottom: 8px;
-      font-size: 10px;
-      letter-spacing: .14em;
-      text-transform: uppercase;
-      opacity:.72;
-    }
-
-    .footer-note{
-      margin-top: 16px;
-      text-align:center;
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    @media (max-width: 900px){
-      .hero{ grid-template-columns: 1fr; }
-      .bracelet-photo{ aspect-ratio: 4 / 3; }
-      .beads{
-        gap: 8px;
-        left: 6%;
-        right: 6%;
-      }
-    }
-  </style>
+        /* Panel boczny (Właściwości i Kodowanie) */
+        #sidebar {
+            flex: 1; max-width: 400px; background: #252526; border-left: 1px solid #3e3e42;
+            display: flex; flex-direction: column; padding: 15px; gap: 15px; overflow-y: auto;
+        }
+        .panel-box { background: #1e1e1e; padding: 12px; border-radius: 6px; border: 1px solid #333; }
+        h3 { font-size: 14px; text-transform: uppercase; color: #aaa; margin-bottom: 10px; }
+        
+        .prop-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 14px; }
+        input[type="color"], input[type="number"], select {
+            background: #333; color: white; border: 1px solid #555; padding: 4px; border-radius: 3px;
+        }
+        
+        /* Edytor prostego kodu */
+        textarea {
+            width: 100%; height: 140px; background: #121212; color: #9cdcfe; font-family: 'Consolas', monospace;
+            padding: 10px; border: 1px solid #444; border-radius: 4px; resize: none; font-size: 13px;
+        }
+        .code-helpers { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+        .code-btn { font-size: 11px; padding: 4px 8px; background: #007acc; }
+    </style>
+    <!-- Biblioteka 3D Three.js -->
+    <script src="https://cloudflare.com"></script>
 </head>
 <body>
-  <div class="wrap">
-    <section class="hero">
-      <div class="panel left">
-        <div class="badge">✨ Custom bracelet builder</div>
-        <h1>Stwórz własną bransoletkę</h1>
-        <p class="lead">
-          Wybierasz kulki, a one nakładają się na prawdziwe zdjęcie linki.
-          Całość jest jasna, nowoczesna i wygląda jak premium butik.
-        </p>
 
-        <div class="stats">
-          <div class="stat">
-            <strong id="count">0 / 10</strong>
-            <span>Wybrane kulki</span>
-          </div>
-          <div class="stat">
-            <strong>Custom</strong>
-            <span>Jedyna opcja</span>
-          </div>
-          <div class="stat">
-            <strong>Light</strong>
-            <span>Jasny design</span>
-          </div>
-        </div>
-      </div>
+    <!-- GÓRNE MENU -->
+    <div id="toolbar">
+        <div class="logo">🟦 MiniBlox Studio</div>
+        <button id="btn-add-block" onclick="addBlock()">+ Dodaj Klocek</button>
+        <button id="btn-del-block" onclick="deleteSelected()">🗑️ Usuń Zaznaczony</button>
+        <div style="flex:1"></div>
+        <button id="btn-play" class="btn-play" onclick="startGame()">▶ GRAJ (Testuj)</button>
+        <button id="btn-stop" class="btn-stop" onclick="stopGame()">⏹ STOP (Edytuj)</button>
+    </div>
 
-      <div class="panel right builder">
-        <div class="builder-top">
-          <span>Podgląd produktu</span>
-          <span class="count" id="status">Gotowe do składania</span>
-        </div>
-
-        <div class="bracelet-stage">
-          <div class="bracelet-photo placeholder" id="photo">
-            <div class="photo-label">Twoje zdjęcie bransoletki</div>
-
-            <div class="overlay">
-              <div class="string-line"></div>
-              <div class="empty" id="emptyNote">Kliknij kulki poniżej, aby dodać je do bransoletki</div>
-              <div class="beads" id="bracelet"></div>
+    <!-- OBSZAR ROBOCZY -->
+    <div id="workspace">
+        <!-- EKRAN 3D -->
+        <div id="viewport">
+            <div id="hud">
+                <b>Tryb Edycji:</b> Kliknij klocek, by go zaznaczyć. Użyj panelu po prawej, by go przesunąć lub oskryptować.<br>
+                <b>Tryb Gry:</b> W, A, S, D - ruch | Spacja - skok
             </div>
-          </div>
+            <div id="win-screen">
+                <h1>🎉 WYGRANA! 🎉</h1>
+                <p>Ukończyłeś swój poziom!</p><br>
+                <button class="btn-stop" style="display:block" onclick="stopGame()">Wróć do edytora</button>
+            </div>
         </div>
 
-        <div class="controls">
-          <button class="btn primary" id="clearBtn">Wyczyść</button>
-          <button class="btn ghost" id="undoBtn">Usuń ostatnią</button>
+        <!-- PANEL PRAWY -->
+        <div id="sidebar">
+            <!-- Właściwości klocka -->
+            <div class="panel-box" id="props-panel">
+                <h3>Właściwości Obiektu</h3>
+                <p id="no-selection" style="color:#777; font-size:13px;">Kliknij dowolny klocek na scenie 3D...</p>
+                <div id="selection-controls" style="display:none;">
+                    <div class="prop-row">
+                        <span>Kolor:</span>
+                        <input type="color" id="prop-color" onchange="updateProp()">
+                    </div>
+                    <div class="prop-row">
+                        <span>Pozycja X:</span>
+                        <input type="number" id="prop-x" step="1" onchange="updateProp()">
+                    </div>
+                    <div class="prop-row">
+                        <span>Pozycja Y (Wysokość):</span>
+                        <input type="number" id="prop-y" step="1" onchange="updateProp()">
+                    </div>
+                    <div class="prop-row">
+                        <span>Pozycja Z:</span>
+                        <input type="number" id="prop-z" step="1" onchange="updateProp()">
+                    </div>
+                    <div class="prop-row">
+                        <span>Szerokość (X):</span>
+                        <input type="number" id="prop-sx" min="1" step="1" onchange="updateProp()">
+                    </div>
+                    <div class="prop-row">
+                        <span>Długość (Z):</span>
+                        <input type="number" id="prop-sz" min="1" step="1" onchange="updateProp()">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Łatwe kodowanie -->
+            <div class="panel-box" id="code-panel">
+                <h3>Łatwy Skrypt (Kodowanie Klocka)</h3>
+                <p style="font-size:12px; color:#aaa; margin-bottom:8px;">
+                    Wpisz proste polecenia dla zaznaczonego klocka (jedno pod drugim):
+                </p>
+                <textarea id="block-code" placeholder="Wybierz klocek i kliknij przyciski poniżej..." oninput="saveCode()"></textarea>
+                
+                <div class="code-helpers">
+                    <button class="code-btn" onclick="insertCode('OBRACAJ')">+ Obracaj</button>
+                    <button class="code-btn" onclick="insertCode('LATAJ')">+ Lataj góra-dół</button>
+                    <button class="code-btn" onclick="insertCode('LAWA')">+ Lawa (Resetuje gracza)</button>
+                    <button class="code-btn" onclick="insertCode('META')">+ Meta (Wygrana)</button>
+                    <button class="code-btn" onclick="insertCode('TRAMPOLINA')">+ Trampolina</button>
+                </div>
+            </div>
         </div>
-      </div>
-    </section>
+    </div>
 
-    <section class="panel shop">
-      <div class="card">
-        <h2>Kulki do wyboru</h2>
-        <p>Kliknij kulkę, a pojawi się na zdjęciu linki. Limit to 10 sztuk.</p>
-        <div class="bead-grid" id="beadGrid"></div>
-      </div>
-    </section>
+<script>
+    // --- INICJALIZACJA SILNIKA 3D ---
+    const viewport = document.getElementById('viewport');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x87CEEB); // Niebo
 
-    <div class="footer-note">Limit: 10 kulek • Jasny styl • Real photo overlay</div>
-  </div>
+    const camera = new THREE.PerspectiveCamera(60, viewport.clientWidth / viewport.clientHeight, 0.1, 1000);
+    camera.position.set(0, 12, 18);
+    camera.lookAt(0, 0, 0);
 
-  <script>
-    const beadOptions = [
-      { name: "Perła", emoji: "⚪", color: "linear-gradient(135deg, #ffffff, #dbeafe)" },
-      { name: "Róż", emoji: "💗", color: "linear-gradient(135deg, #fb7185, #f472b6)" },
-      { name: "Lila", emoji: "💜", color: "linear-gradient(135deg, #c084fc, #8b5cf6)" },
-      { name: "Mięta", emoji: "💚", color: "linear-gradient(135deg, #34d399, #10b981)" },
-      { name: "Złoto", emoji: "✨", color: "linear-gradient(135deg, #fbbf24, #f59e0b)" },
-      { name: "Niebieski", emoji: "🔵", color: "linear-gradient(135deg, #60a5fa, #2563eb)" },
-      { name: "Czerwony", emoji: "🔴", color: "linear-gradient(135deg, #fb7185, #e11d48)" },
-      { name: "Cytryna", emoji: "🌞", color: "linear-gradient(135deg, #fde047, #f59e0b)" },
-      { name: "Czarny", emoji: "⚫", color: "linear-gradient(135deg, #64748b, #0f172a)" },
-      { name: "Candy", emoji: "🍬", color: "linear-gradient(135deg, #f9a8d4, #c084fc)" }
-    ];
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(viewport.clientWidth, viewport.clientHeight);
+    viewport.appendChild(renderer.domElement);
 
-    const MAX_BEADS = 10;
-    const bracelet = document.getElementById("bracelet");
-    const beadGrid = document.getElementById("beadGrid");
-    const count = document.getElementById("count");
-    const status = document.getElementById("status");
-    const emptyNote = document.getElementById("emptyNote");
-    const clearBtn = document.getElementById("clearBtn");
-    const undoBtn = document.getElementById("undoBtn");
-    const photo = document.getElementById("photo");
+    // Światło
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    dirLight.position.set(10, 20, 10);
+    scene.add(dirLight);
 
-    let selected = [];
+    // Siatka pomocnicza w edytorze
+    const gridHelper = new THREE.GridHelper(40, 40);
+    scene.add(gridHelper);
 
-    function renderGrid() {
-      beadGrid.innerHTML = "";
-      beadOptions.forEach((bead, index) => {
-        const btn = document.createElement("button");
-        btn.className = "pick";
-        btn.style.background = bead.color;
-        btn.innerHTML = `<div style="font-size:28px; line-height:1;">${bead.emoji}</div><small>${bead.name}</small>`;
-        btn.addEventListener("click", () => addBead(index));
-        beadGrid.appendChild(btn);
-      });
+    // Zmienne platformy
+    let blocks = [];
+    let selectedBlock = null;
+    let isPlaying = false;
+
+    // --- TWORZENIE KLOCKÓW ---
+    function createBlock(x, y, z, sx, sy, sz, color, code = "") {
+        const geo = new THREE.BoxGeometry(1, 1, 1);
+        const mat = new THREE.MeshLambertMaterial({ color: color });
+        const mesh = new THREE.Mesh(geo, mat);
+        
+        mesh.position.set(x, y, z);
+        mesh.scale.set(sx, sy, sz);
+        
+        // Dane gry przypisane do klocka
+        mesh.userData = {
+            code: code,
+            startY: y,
+            origColor: color
+        };
+
+        scene.add(mesh);
+        blocks.push(mesh);
+        return mesh;
     }
 
-    function renderBracelet() {
-      bracelet.innerHTML = "";
-      selected.forEach((bead, index) => {
-        const el = document.createElement("div");
-        el.className = "bead";
-        el.style.background = bead.color;
-        el.title = `Kliknij, aby usunąć: ${bead.name}`;
-        el.textContent = bead.emoji;
-        el.addEventListener("click", () => {
-          selected.splice(index, 1);
-          renderBracelet();
-        });
-        bracelet.appendChild(el);
-      });
+    // Domyślny poziom startowy (mini Obby)
+    createBlock(0, -0.5, 0, 10, 1, 10, "#4caf50", ""); // Start
+    createBlock(0, 0.5, -8, 4, 1, 4, "#ff9800", "LATAJ"); // Ruchoma platforma
+    createBlock(0, 1.5, -15, 6, 0.5, 2, "#f44336", "LAWA"); // Przeszkoda lawa
+    createBlock(0, 1.5, -21, 5, 1, 5, "#ffd700", "META\nOBRACAJ"); // Meta
 
-      count.textContent = `${selected.length} / ${MAX_BEADS}`;
-      emptyNote.style.display = selected.length ? "none" : "grid";
-      status.textContent = selected.length < MAX_BEADS ? "Składaj dalej" : "Limit osiągnięty";
-      undoBtn.disabled = selected.length === 0;
-      clearBtn.disabled = selected.length === 0;
-
-      const full = selected.length >= MAX_BEADS;
-      document.querySelectorAll(".pick").forEach(btn => btn.disabled = full);
+    function addBlock() {
+        if (isPlaying) return;
+        const b = createBlock(0, 1, -4, 3, 1, 3, "#2196f3", "");
+        selectBlock(b);
     }
 
-    function addBead(index) {
-      if (selected.length >= MAX_BEADS) return;
-      selected.push(beadOptions[index]);
-      renderBracelet();
+    function deleteSelected() {
+        if (!selectedBlock || isPlaying) return;
+        scene.remove(selectedBlock);
+        blocks = blocks.filter(b => b !== selectedBlock);
+        selectedBlock = null;
+        updateUI();
     }
 
-    clearBtn.addEventListener("click", () => {
-      selected = [];
-      renderBracelet();
-    });
+    // --- ZAZNACZANIE MYSZKĄ ---
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
 
-    undoBtn.addEventListener("click", () => {
-      selected.pop();
-      renderBracelet();
-    });
+    viewport.addEventListener('mousedown', (e) => {
+        if (isPlaying) return;
+        const rect = renderer.getBoundingClientRect();
+        mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
-    renderGrid();
-    renderBracelet();
-  </script>
-</body>
-</html>
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(blocks);
+
+if (intersects.length > 0) {
+selectBlock(intersects[0].object);
+} else {
+selectBlock(null);
+}
+});
+function selectBlock(block) {
+// Przywróć ramkę/kolor poprzedniego
+if (selectedBlock) {
+selectedBlock.material.emissive.setHex(0x000000);
+}
+selectedBlock = block;
+if (selectedBlock) {
+selectedBlock.material.emissive.setHex(0x333333); // Podświetlenie
+}
+updateUI();
+}
+// --- AKTUALIZACJA INTERFEJSU ---
+function updateUI() {
+const noSel = document.getElementById('no-selection');
+const ctrls = document.getElementById('selection-controls');
+const codeArea = document.getElementById('block-code');
+if (!selectedBlock) {
+noSel.style.display = 'block';
+ctrls.style.display = 'none';
+codeArea.value = "";
+codeArea.disabled = true;
+return;
+}
+noSel.style.display = 'none';
+ctrls.style.display = 'block';
+codeArea.disabled = false;
+document.getElementById('prop-color').value = selectedBlock.userData.origColor;
+document.getElementById('prop-x').value = selectedBlock.position.x;
+document.getElementById('prop-y').value = selectedBlock.position.y;
+document.getElementById('prop-z').value = selectedBlock.position.z;
+document.getElementById('prop-sx').value = selectedBlock.scale.x;
+document.getElementById('prop-sz').value = selectedBlock.scale.z;
+codeArea.value = selectedBlock.userData.code;
+}
+function updateProp() {
+if (!selectedBlock) return;
+const col = document.getElementById('prop-color').value;
+selectedBlock.material.color.set(col);
+selectedBlock.userData.origColor = col;
+selectedBlock.position.x = parseFloat(document.getElementById('prop-x').value) || 0;
+selectedBlock.position.y = parseFloat(document.getElementById('prop-y').value) || 0;
+selectedBlock.position.z = parseFloat(document.getElementById('prop-z').value) || 0;
+selectedBlock.userData.startY = selectedBlock.position.y;
+selectedBlock.scale.x = parseFloat(document.getElementById('prop-sx').value) || 1;
+selectedBlock.scale.z = parseFloat(document.getElementById('prop-sz').value) || 1;
+}
+function saveCode() {
+if (selectedBlock) {
+selectedBlock.userData.code = document.getElementById('block-code').value;
+}
+}
+function insertCode(cmd) {
+if (!selectedBlock) return;
+const area = document.getElementById('block-code');
+area.value += (area.value ? "\n" : "") + cmd;
+saveCode();
+}
+// --- GRACZ I TRYB GRY (ROBLOX PLAYER) ---
+const playerGeo = new THREE.BoxGeometry(1, 2, 1);
+const playerMat = new THREE.MeshLambertMaterial({ color: 0x00a2ff });
+const player = new THREE.Mesh(playerGeo, playerMat);
+player.visible = false;
+scene.add(player);
+let playerVel = new THREE.Vector3();
+let canJump = false;
+const keys = {};
+window.addEventListener('keydown', e => keys[e.code] = true);
+window.addEventListener('keyup', e => keys[e.code] = false);
+function startGame() {
+isPlaying = true;
+selectBlock(null);
+gridHelper.visible = false;
+document.getElementById('btn-play').style.display = 'none';
+document.getElementById('btn-stop').style.display = 'block';
+document.getElementById('win-screen').style.display = 'none';
+// Reset pozycji gracza
+player.position.set(0, 3, 0);
+playerVel.set(0, 0, 0);
+player.visible = true;
+}
+function stopGame() {
+isPlaying = false;
+gridHelper.visible = true;
+player.visible = false;
+document.getElementById('btn-play').style.display = 'block';
+document.getElementById('btn-stop').style.display = 'none';
+document.getElementById('win-screen').style.display = 'none';
+// Przywrócenie pozycji klocków
+blocks.forEach(b => {
+b.position.y = b.userData.startY;
+b.rotation.set(0, 0, 0);
+});
+camera.position.set(0, 12, 18);
+camera.lookAt(0, 0, 0);
+}
+// --- GŁÓWNA PĘTLA GRY I FIZYKI ---
+let clock = new THREE.Clock();
+function animate() {
+requestAnimationFrame(animate);
+const time = clock.getElapsedTime();
+if (isPlaying) {
+// 1. Wykonywanie prostego kodu klocków
+blocks.forEach(b => {
+const code = b.userData.code.toUpperCase();
+if (code.includes("OBRACAJ")) {
+b.rotation.y += 0.03;
+}
+if (code.includes("LATAJ")) {
+b.position.y = b.userData.startY + Math.sin(time * 2) * 2;
+}
+});
+// 2. Sterowanie graczem
+const speed = 0.15;
+if (keys['KeyW'] || keys['ArrowUp']) player.position.z -= speed;
+if (keys['KeyS'] || keys['ArrowDown']) player.position.z += speed;
+if (keys['KeyA'] || keys['ArrowLeft']) player.position.x -= speed;
+if (keys['KeyD'] || keys['ArrowRight']) player.position.x += speed;
+if (keys['Space'] && canJump) {
+playerVel.y = 0.35;
+canJump = false;
+}
+// Grawitacja
+playerVel.y -= 0.015;
+player.position.y += playerVel.y;
+// Spadnięcie w przepaść
+if (player.position.y < -15) {
+player.position.set(0, 3, 0);
+playerVel.set(0, 0, 0);
+}
+// 3. Kolizje z klockami
+const playerBox = new THREE.Box3().setFromObject(player);
+blocks.forEach(b => {
+const blockBox = new THREE.Box3().setFromObject(b);
+if (playerBox.intersectsBox(blockBox)) {
+const code = b.userData.code.toUpperCase();
+// Reakcje na kod klocka
+if (code.includes("LAWA")) {
+player.position.set(0, 3, 0);
+playerVel.set(0, 0, 0);
+return;
+}
+if (code.includes("META")) {
+document.getElementById('win-screen').style.display = 'flex';
+return;
+}
+if (code.includes("TRAMPOLINA")) {
+playerVel.y = 0.6;
+canJump = false;
+return;
+}
+// Lądowanie na klocku od góry
+if (playerVel.y <= 0 && player.position.y - 0.8 >= b.position.y) {
+player.position.y = blockBox.max.y + 1;
+playerVel.y = 0;
+canJump = true;
+}
+}
+});
+// Kamera podąża za graczem (jak w Roblox)
+camera.position.x = player.position.x;
+camera.position.y = player.position.y + 5;
+camera.position.z = player.position.z + 10;
+camera.lookAt(player.position);
+}
+renderer.render(scene, camera);
+}
+// Dopasowanie ekranu przy zmianie rozmiaru okna
+window.addEventListener('resize', () => {
+camera.aspect = viewport.clientWidth / viewport.clientHeight;
+camera.updateProjectionMatrix();
+renderer.setSize(viewport.clientWidth, viewport.clientHeight);
+});
+animate();
